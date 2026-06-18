@@ -1,0 +1,252 @@
+\documentclass[aspectratio=169,11pt]{beamer}
+
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{url}
+\usepackage{hyperref}
+
+\usetheme{Madrid}
+\usecolortheme{default}
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{footline}[frame number]
+
+\setmainfont{Arial}
+\setsansfont{Arial}
+\IfFontExistsTF{Microsoft YaHei}{
+  \setCJKmainfont{Microsoft YaHei}
+  \setCJKsansfont{Microsoft YaHei}
+}{
+  \setCJKmainfont{SimSun}
+  \setCJKsansfont{SimSun}
+}
+
+\graphicspath{{../figures/}}
+
+\title{Predicting Loss Curve of LLM Pretraining}
+\subtitle{Course Project Task 2}
+\author{王渭臻，1900010767，本科生}
+\institute{GitHub repository: \url{https://github.com/Tomori47/task2\_loss\_prediction}}
+\date{\today}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+\begin{frame}{Problem Background}
+  \begin{itemize}
+    \item LLM 预训练成本很高，因此希望提前预测训练过程中的 loss curve。
+    \item Scaling laws 研究模型规模、数据规模、训练计算量和 loss 的关系。
+    \item Loss curve prediction 进一步关注整个训练过程，而不只是最终 loss。
+    \item Learning rate schedule 会影响后期 loss 下降速度和最终效果。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Task Objective}
+  \begin{itemize}
+    \item 课程 Task 2 要求：使用 cosine LRS 的 loss curve 拟合模型。
+    \item 主测试：预测 WSD LRS 下的 loss curve。
+    \item 附加测试：在 811 LRS 上评估泛化效果。
+    \item 评价指标：MAE、MSE、RMSE、MAPE。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Data Description}
+  \begin{itemize}
+    \item 数据文件：\texttt{data/gpt\_loss+lrs.pkl}
+    \item 三条曲线：\texttt{cosine\_rope}、\texttt{wsd\_rope}、\texttt{811\_rope}
+    \item 每条曲线包含：\texttt{step}、\texttt{Metrics/loss}、\texttt{lr}
+  \end{itemize}
+  \vspace{0.2cm}
+  \begin{columns}
+    \column{0.49\textwidth}
+    \includegraphics[width=\textwidth]{\detokenize{data_preview_loss.png}}
+    \column{0.49\textwidth}
+    \includegraphics[width=\textwidth]{\detokenize{data_preview_lr.png}}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Experimental Setting}
+  \begin{table}
+    \centering
+    \begin{tabular}{ll}
+      \toprule
+      Split & Curve \\
+      \midrule
+      Fit & \texttt{M:100M\_gpt\_D:20B\_scheduler:cosine\_rope} \\
+      Main test & \texttt{M:100M\_gpt\_D:20B\_scheduler:wsd\_rope} \\
+      Additional test & \texttt{M:100M\_gpt\_D:20B\_scheduler:811\_rope} \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \vspace{0.3cm}
+  \begin{itemize}
+    \item 所有方法使用相同的 fit/test 划分。
+    \item 目标是检查从 cosine schedule 到 WSD schedule 的预测能力。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Baseline 1: Tissue et al.}
+  \begin{block}{Model}
+    \[
+      L(s) = L_0 + A\cdot S_1(s)^{-\alpha} - C\cdot S_2(s)
+    \]
+  \end{block}
+  \begin{itemize}
+    \item $S_1(s)$：累计学习率。
+    \item $S_2(s)$：learning rate annealing 修正项。
+    \item 本项目中固定 \texttt{lambda\_decay = 0.99}。
+    \item 直觉：loss 随累计训练强度下降，同时由学习率衰减项修正。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Baseline 2: Simplified Multi-Power Law}
+  \begin{block}{Simplified MPL}
+    \[
+      L(t) = L_0 + A\cdot(S_1(t)+\epsilon)^{-\alpha} - B\cdot D(t)
+    \]
+  \end{block}
+  \[
+    D(t) = \sum_{k=1}^{t} \max(lr_{k-1} - lr_k, 0)
+           \cdot(S_{\text{tail}}(k,t)+\epsilon)
+  \]
+  \begin{itemize}
+    \item 这是简化实现，没有完全复现 Luo et al. 的所有训练细节。
+    \item 保留两个核心思想：累计学习率项和学习率衰减修正项。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Our Method: Weighted Tissue}
+  \begin{itemize}
+    \item 预测公式仍然使用 Tissue 形式。
+    \item 改动只在拟合目标：对后期 step 给予更高权重。
+  \end{itemize}
+  \begin{block}{Weighted Least Squares}
+    \[
+      \min \sum_s w_s \left(L_{\text{true}}(s)-L_{\text{pred}}(s)\right)^2
+    \]
+    \[
+      w_s = 1 + \gamma\cdot\frac{s}{T}, \quad \gamma = 2.0
+    \]
+  \end{block}
+  \begin{itemize}
+    \item 直觉：后期 loss 和最终 loss 更重要，因此拟合时更重视后期曲线。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Results on Cosine Fit}
+  \begin{table}
+    \centering
+    \begin{tabular}{lccc}
+      \toprule
+      Method & MAE & RMSE & MAPE \\
+      \midrule
+      Tissue & 0.07730 & 0.15378 & 2.40\% \\
+      Simplified MPL & 0.07730 & 0.15378 & 2.40\% \\
+      Weighted Tissue & 0.07200 & 0.15463 & 2.20\% \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \begin{itemize}
+    \item 三种方法都能拟合 cosine loss 的主要趋势。
+    \item Weighted Tissue 的 MAE 和 MAPE 更低，但 RMSE 略高。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Results on WSD Prediction}
+  \begin{itemize}
+    \item 主测试：在 WSD LRS 上预测 loss curve。
+    \item 下图比较 ground truth、Tissue、simplified MPL 和 Weighted Tissue。
+  \end{itemize}
+  \centering
+  \includegraphics[width=0.86\textwidth]{\detokenize{method_comparison_wsd.png}}
+\end{frame}
+
+\begin{frame}{Weighted Tissue on WSD}
+  \begin{columns}
+    \column{0.45\textwidth}
+    \begin{itemize}
+      \item MAE = 0.13999
+      \item RMSE = 0.19436
+      \item MAPE = 4.64\%
+      \item 相比 baseline 有小幅改善。
+    \end{itemize}
+    \column{0.55\textwidth}
+    \includegraphics[width=\textwidth]{\detokenize{our_method_predict_wsd.png}}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{Quantitative Comparison}
+  \begin{table}
+    \centering
+    \begin{tabular}{lccc}
+      \toprule
+      Method & MAE & RMSE & MAPE \\
+      \midrule
+      Tissue & 0.15364 & 0.20276 & 5.14\% \\
+      Simplified MPL & 0.15364 & 0.20275 & 5.14\% \\
+      Weighted Tissue & 0.13999 & 0.19436 & 4.64\% \\
+      \bottomrule
+    \end{tabular}
+  \end{table}
+  \begin{itemize}
+    \item Weighted Tissue 将 WSD MAE 从约 0.15364 降到 0.13999。
+    \item Weighted Tissue 将 WSD MAPE 从约 5.14\% 降到 4.64\%。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Analysis}
+  \begin{itemize}
+    \item Tissue 和 simplified MPL 的衰减修正项在当前数据中几乎收敛到 0。
+    \item 说明只用一条 cosine 曲线拟合时，模型主要依赖累计学习率 power-law 项。
+    \item Weighted Tissue 没有改变模型形式，只改变拟合权重。
+    \item 通过强调后期 loss，Weighted Tissue 在 WSD 预测上获得小幅改善。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Limitations}
+  \begin{itemize}
+    \item 只使用了三条 loss curves，数据规模较小。
+    \item Simplified MPL 没有完全复现 Luo et al. 的完整模型。
+    \item 没有进行大规模超参数搜索。
+    \item Weighted Tissue 只使用固定的 $\gamma=2.0$。
+    \item 结果主要作为低成本课程复现实验。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Conclusion}
+  \begin{itemize}
+    \item 完成 Tissue baseline。
+    \item 完成 simplified Multi-Power Law baseline。
+    \item 提出并实现 Weighted Tissue fitting。
+    \item 在 WSD 主测试上，Weighted Tissue 相比 baseline 有小幅改善。
+    \item 已生成代码、CSV 指标、图像、README 和 slides。
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Code and Contributions}
+  \begin{itemize}
+    \item GitHub repository: \url{https://github.com/Tomori47/task2\_loss\_prediction}
+    \item Team members: 王渭臻，1900010767，本科生
+    \item 关键输出：
+      \begin{itemize}
+        \item \texttt{results/metrics\_summary.csv}
+        \item \texttt{figures/method\_comparison\_wsd.png}
+        \item \texttt{slides/task2\_loss\_prediction\_slides.tex}
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{References}
+  \begin{itemize}
+    \item Tissue et al., 2024. \textit{Scaling Law with Learning Rate Annealing}.
+    \item Luo et al., 2024/2025. \textit{Multi-Power Law Scaling for Loss Curve Prediction}.
+    \item Course Task 2 handout: \textit{Predicting Loss Curve of LLM Pretraining}.
+  \end{itemize}
+\end{frame}
+
+\end{document}

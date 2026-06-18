@@ -1,0 +1,74 @@
+Task 2 Loss Curve Data Summary
+==================================
+Data file: data/gpt_loss+lrs.pkl
+Load method: pickle
+
+Top-level structure
+-------------------
+root: type=dict, len=3, preview=['M:100M_gpt_D:20B_scheduler:811_rope', 'M:100M_gpt_D:20B_scheduler:wsd_rope', 'M:100M_gpt_D:20B_scheduler:cosine_rope']
+  keys: ['M:100M_gpt_D:20B_scheduler:811_rope', 'M:100M_gpt_D:20B_scheduler:wsd_rope', 'M:100M_gpt_D:20B_scheduler:cosine_rope']
+  M:100M_gpt_D:20B_scheduler:811_rope: type=DataFrame, shape=(33908, 3), len=33908
+    columns: ['step', 'Metrics/loss', 'lr']
+    field step: dtype=int64, len=33908, preview=[0, 1, 2]
+    field Metrics/loss: dtype=float64, len=33908, preview=[10.403170585632324, 10.402223587036133, 10.400403022766113]
+    field lr: dtype=float64, len=33908, preview=[0.001, 0.001, 0.001]
+  M:100M_gpt_D:20B_scheduler:wsd_rope: type=DataFrame, shape=(33907, 3), len=33907
+    columns: ['step', 'Metrics/loss', 'lr']
+    field step: dtype=int64, len=33907, preview=[0, 1, 2]
+    field Metrics/loss: dtype=float64, len=33907, preview=[10.40317153930664, 10.402223587036133, 10.400403022766113]
+    field lr: dtype=float64, len=33907, preview=[0.001, 0.001, 0.001]
+  M:100M_gpt_D:20B_scheduler:cosine_rope: type=DataFrame, shape=(33907, 3), len=33907
+    columns: ['step', 'Metrics/loss', 'lr']
+    field step: dtype=int64, len=33907, preview=[0, 1, 2]
+    field Metrics/loss: dtype=float64, len=33907, preview=[10.40317153930664, 10.402222633361816, 10.40040111541748]
+    field lr: dtype=float64, len=33907, preview=[0.001, 0.0009999999980684609, 0.000999999992273843]
+
+Detected fields
+---------------
+contains loss or metrics/loss: True
+contains lr or learning_rate: True
+schedule/name-like fields or keys: M:100M_gpt_D:20B_scheduler:811_rope, M:100M_gpt_D:20B_scheduler:wsd_rope, M:100M_gpt_D:20B_scheduler:cosine_rope, step, step, step
+
+Extracted curves
+----------------
+[1] M:100M_gpt_D:20B_scheduler:811_rope
+  source: root.M:100M_gpt_D:20B_scheduler:811_rope
+  schedule_guess: wsd_or_multi_step
+  step_length: 33908
+  step_start: 0
+  step_end: 33907
+  loss_length: 33908
+  lr_length: 33908
+  lengths_match: True
+  loss: min=2.5348268, max=10.403171, start=10.403171, end=2.6402993
+  lr: min=0.0001, max=0.001, start=0.001, end=0.0001
+  anomalies: none
+[2] M:100M_gpt_D:20B_scheduler:wsd_rope
+  source: root.M:100M_gpt_D:20B_scheduler:wsd_rope
+  schedule_guess: wsd_or_multi_step
+  step_length: 33907
+  step_start: 0
+  step_end: 33907
+  loss_length: 33907
+  lr_length: 33907
+  lengths_match: True
+  loss: min=2.5384896, max=10.403172, start=10.403172, end=2.6357319
+  lr: min=0.0001, max=0.001, start=0.001, end=0.0001
+  anomalies: none
+[3] M:100M_gpt_D:20B_scheduler:cosine_rope
+  source: root.M:100M_gpt_D:20B_scheduler:cosine_rope
+  schedule_guess: cosine
+  step_length: 33907
+  step_start: 0
+  step_end: 33907
+  loss_length: 33907
+  lr_length: 33907
+  lengths_match: True
+  loss: min=2.5368161, max=10.403172, start=10.403172, end=2.6461773
+  lr: min=0.0001, max=0.001, start=0.001, end=0.0001
+  anomalies: none
+
+Schedule grouping
+-----------------
+cosine: M:100M_gpt_D:20B_scheduler:cosine_rope
+wsd_or_multi_step: M:100M_gpt_D:20B_scheduler:811_rope, M:100M_gpt_D:20B_scheduler:wsd_rope

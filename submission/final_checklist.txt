@@ -1,0 +1,41 @@
+Final Submission Checklist
+==========================
+
+1. Project structure completeness
+   Status: complete.
+   The submission/ folder contains README.md, requirements.txt, run_all.py, src/, results/, figures/, and slides/.
+
+2. Code execution
+   Status: complete.
+   The command `python run_all.py` has been run successfully after final information updates.
+
+3. Slides PDF
+   Status: complete.
+   The final slides PDF has been regenerated and copied into:
+   submission/slides/task2_loss_prediction_slides.pdf
+
+4. README completeness
+   Status: complete.
+   README.md describes the project title, data, experimental setting, Tissue baseline, simplified MPL baseline, Weighted Tissue method, result summary, run commands, and key output files.
+
+5. GitHub link
+   Status: complete.
+   GitHub repository has been filled in:
+   https://github.com/Tomori47/task2_loss_prediction
+
+6. Team members and contribution
+   Status: complete.
+   Team member and contribution information has been filled in:
+   Wang Weizhen, 1900010767, undergraduate student; responsible for all code implementation, experiment reproduction, method development, result analysis, and slides preparation.
+
+7. Placeholder check
+   Status: complete.
+   Required README and slides files have been searched and no unfilled placeholders remain.
+
+8. Core output files
+   Status: complete.
+   Required metrics files, figures, LaTeX source, and slides PDF exist in the project and submission folders.
+
+9. Submission readiness
+   Status: complete.
+   submission/ has reached the ready-to-submit state.
