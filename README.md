@@ -67,7 +67,7 @@ Figures:
 
 ### Simplified Multi-Power Law Baseline
 
-This project implements a simplified Multi-Power Law baseline. The full Luo et al. method has more parameters and training details, and official code may require extra adaptation. For a low-cost course reproduction, the simplified version keeps the two main ingredients: a cumulative learning-rate power-law term and a learning-rate decay correction term.
+This project implements a simplified Multi-Power Law baseline. The full Luo et al. method has more parameters and training details, and official code may require extra adaptation. The simplified version keeps the two main ingredients: a cumulative learning-rate power-law term and a learning-rate decay correction term.
 
 Formula:
 
@@ -201,4 +201,4 @@ The LaTeX source file is also included:
 
 ## Notes
 
-This project is a low-cost course reproduction. The simplified MPL implementation does not fully reproduce all details from Luo et al. The main goal is to provide a complete, runnable project with baselines, one simple method, quantitative results, figures, README, and slides draft.
+This project focuses on reproducing and comparing loss curve prediction methods under different learning rate schedules. The implementation includes a Tissue et al. baseline, a simplified Multi-Power Law baseline, and a weighted fitting variant proposed in this project. The experiments are designed to be reproducible with the provided data, scripts, quantitative metrics, and generated figures.
